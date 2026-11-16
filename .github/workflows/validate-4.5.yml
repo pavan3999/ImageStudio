@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   validate:
-    name: Validate shell scripts and Java detector
+    name: Validate source, APK archive and Java detector
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -22,6 +22,16 @@ jobs:
         run: |
           java -version
           javac -version
+
+      - name: Verify original APK archive and SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="original/Android+Image+Studio_4.4.2_APKPure.apk"
+          test -s "$APK"
+          test -s original/SHA256SUMS.txt
+          sha256sum --check original/SHA256SUMS.txt
+          echo "Original APK archive and SHA-256 verified."
 
       - name: Check shell syntax
         shell: bash
@@ -51,6 +61,7 @@ jobs:
         run: |
           {
             echo "## Image Studio 4.5 validation"
+            echo "- Original APK presence and SHA-256 verification"
             echo "- Shell syntax validation"
             echo "- Java image-format detector compile and tests"
             echo "- Patch presence check"
