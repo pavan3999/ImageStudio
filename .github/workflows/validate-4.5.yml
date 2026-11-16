@@ -1,0 +1,61 @@
+name: Image Studio 4.5 - source validation
+
+on:
+  push:
+    branches: [ "4.5" ]
+  pull_request:
+    branches: [ "4.5" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate shell scripts and Java detector
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: none
+
+      - name: Check shell syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          find app/src/main/assets/engine -maxdepth 1 -type f -name '*.sh' -print0 |
+            while IFS= read -r -d '' script; do
+              echo "Checking $script"
+              sh -n "$script"
+            done
+
+      - name: Compile and run image format detector tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/test-classes
+          javac -d build/test-classes \
+            app/src/main/java/com/redlee90/imagekitchenforandroid/engine/ImageFormatDetector.java \
+            tests/ImageFormatDetectorTest.java
+          java -cp build/test-classes ImageFormatDetectorTest
+
+      - name: Check source patch is present
+        run: test -s patches/MainActivity-4.5.patch
+
+      - name: Publish validation summary
+        if: always()
+        run: |
+          {
+            echo "## Image Studio 4.5 validation"
+            echo "- Shell syntax validation"
+            echo "- Java image-format detector compile and tests"
+            echo "- Patch presence check"
+            echo ""
+            echo "This workflow does not build an APK: the repository currently contains a decompiled source change set, not the complete original Gradle project."
+          } >> "$GITHUB_STEP_SUMMARY"
