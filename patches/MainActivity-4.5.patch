@@ -1,0 +1,182 @@
+--- original/MainActivity.java
++++ modified/MainActivity.java
+@@ -27,6 +27,8 @@
+ import androidx.appcompat.widget.Toolbar;
+ import com.github.clans.fab.FloatingActionButton;
+ import com.google.android.material.snackbar.Snackbar;
++import com.redlee90.imagekitchenforandroid.engine.EngineInstaller;
++import com.redlee90.imagekitchenforandroid.engine.ImageFormatDetector;
+ import java.io.File;
+ import java.io.FileInputStream;
+ import java.io.FileNotFoundException;
+@@ -103,7 +105,7 @@
+             }
+             MainActivity.this.x.sendEmptyMessage(21);
+             try {
+-                e.b.a.a.a(true).w(new C0032a(100, "losetup -d /dev/block/loop1", "umount " + MainActivity.this.u.getCanonicalPath()));
++                e.b.a.a.a(true).w(new C0032a(100, "sh " + shellQuote(MainActivity.this.v + File.separator + "unmount_ext4.sh") + " " + shellQuote(MainActivity.this.v) + " " + shellQuote(MainActivity.this.u.getCanonicalPath())));
+             } catch (e.b.a.b.a | IOException | TimeoutException e2) {
+                 MainActivity.this.x.sendMessage(MainActivity.this.e0(13, e2.getLocalizedMessage()));
+             }
+@@ -591,7 +593,7 @@
+                 if (MainActivity.this.t) {
+                     MainActivity.this.x.sendEmptyMessage(21);
+                     try {
+-                        e.b.a.a.a(true).w(new C0033a(100, "losetup -d /dev/block/loop1", "umount " + MainActivity.this.u.getCanonicalPath()));
++                        e.b.a.a.a(true).w(new C0033a(100, "sh " + shellQuote(MainActivity.this.v + File.separator + "unmount_ext4.sh") + " " + shellQuote(MainActivity.this.v) + " " + shellQuote(MainActivity.this.u.getCanonicalPath())));
+                         return;
+                     } catch (e.b.a.b.a | IOException | TimeoutException e2) {
+                         e = e2;
+@@ -602,7 +604,7 @@
+                 } else {
+                     MainActivity.this.x.sendEmptyMessage(18);
+                     try {
+-                        e.b.a.a.a(false).w(new b(104, "sh " + MainActivity.this.v + File.separator + "repackimg.sh " + MainActivity.this.v + " " + MainActivity.this.u.getCanonicalPath()));
++                        e.b.a.a.a(false).w(new b(104, "sh " + shellQuote(MainActivity.this.v + File.separator + "repackimg.sh") + " " + shellQuote(MainActivity.this.v) + " " + shellQuote(MainActivity.this.u.getCanonicalPath()) + (MainActivity.this.J.getBoolean("legacy_aik_engine", false) ? " normal '' --legacy" : "")));
+                         return;
+                     } catch (e.b.a.b.a | IOException | TimeoutException e3) {
+                         e = e3;
+@@ -939,7 +941,7 @@
+         try {
+             File file2 = new File(file.getCanonicalPath() + ".raw");
+             try {
+-                e.b.a.a.a(false).w(new c(102, 100000, new String[]{this.v + File.separator + "simg2img " + file.getCanonicalPath() + " " + file2.getCanonicalPath()}, file2));
++                e.b.a.a.a(false).w(new c(102, 100000, new String[]{shellQuote(this.v + File.separator + "simg2img") + " " + shellQuote(file.getCanonicalPath()) + " " + shellQuote(file2.getCanonicalPath())}, file2));
+             } catch (e.b.a.b.a | IOException | TimeoutException unused) {
+                 this.x.sendEmptyMessage(24);
+             }
+@@ -952,7 +954,7 @@
+     public void j0(File file) {
+         this.x.sendEmptyMessage(20);
+         try {
+-            e.b.a.a.a(true).w(new d(103, "losetup /dev/block/loop1 " + file.getCanonicalPath(), "mount -t ext4 /dev/block/loop1 " + this.u.getCanonicalPath(), "chown -R " + this.H + ":" + this.H + " " + this.u.getCanonicalPath()));
++            e.b.a.a.a(true).w(new d(103, "sh " + shellQuote(this.v + File.separator + "mount_ext4.sh") + " " + shellQuote(this.v) + " " + shellQuote(this.u.getCanonicalPath()) + " " + shellQuote(file.getCanonicalPath())));
+         } catch (e.b.a.b.a | IOException | TimeoutException unused) {
+             this.x.sendEmptyMessage(15);
+         }
+@@ -961,7 +963,7 @@
+     /* JADX INFO: Access modifiers changed from: private */
+     public void k0(File file) throws Throwable {
+         int iN0 = n0(file);
+-        if (iN0 == 1) {
++        if (iN0 == 1 || iN0 == 4) {
+             l0(file);
+             return;
+         }
+@@ -977,7 +979,7 @@
+     private void l0(File file) {
+         this.x.sendEmptyMessage(17);
+         try {
+-            e.b.a.a.a(false).w(new b(101, "sh " + this.v + File.separator + "unpackimg.sh " + this.v + " " + this.u.getCanonicalPath() + " " + file.getCanonicalPath()));
++            e.b.a.a.a(false).w(new b(101, "sh " + shellQuote(this.v + File.separator + "unpackimg.sh") + " " + shellQuote(this.v) + " " + shellQuote(this.u.getCanonicalPath()) + " " + shellQuote(file.getCanonicalPath()) + (this.J.getBoolean("legacy_aik_engine", false) ? " --legacy" : "")));
+         } catch (e.b.a.b.a | IOException | TimeoutException e2) {
+             this.x.sendMessage(e0(4, e2.getLocalizedMessage()));
+         }
+@@ -994,55 +996,24 @@
+         return !new File(sb.toString()).exists();
+     }
+ 
++    private static String shellQuote(String value) {
++        return "'" + value.replace("'", "'\\''") + "'";
++    }
++
+     private int n0(File file) throws Throwable {
+-        byte[] bArr = new byte[1082];
+-        FileInputStream fileInputStream = null;
+-        try {
+-            FileInputStream fileInputStream2 = new FileInputStream(file);
+-            try {
+-                fileInputStream2.read(bArr);
+-                try {
+-                    fileInputStream2.close();
+-                } catch (IOException e2) {
+-                    e2.printStackTrace();
+-                }
+-                if (Arrays.equals(Arrays.copyOfRange(bArr, 0, 8), new byte[]{65, 78, 68, 82, 79, 73, 68, 33})) {
+-                    return 1;
+-                }
+-                if (Arrays.equals(Arrays.copyOfRange(bArr, 0, 4), new byte[]{58, -1, 38, -19})) {
+-                    return 2;
+-                }
+-                return Arrays.equals(Arrays.copyOfRange(bArr, 1080, 1082), new byte[]{83, -17}) ? 3 : -1;
+-            } catch (FileNotFoundException unused) {
+-                fileInputStream = fileInputStream2;
+-                try {
+-                    fileInputStream.close();
+-                } catch (IOException e3) {
+-                    e3.printStackTrace();
+-                }
+-                return -1;
+-            } catch (IOException unused2) {
+-                fileInputStream = fileInputStream2;
+-                try {
+-                    fileInputStream.close();
+-                } catch (IOException e4) {
+-                    e4.printStackTrace();
+-                }
++        ImageFormatDetector.Type type = ImageFormatDetector.detect(file);
++        switch (type) {
++            case ANDROID_BOOT:
++                return 1;
++            case SPARSE:
++                return 2;
++            case EXT4:
++                return 3;
++            case VENDOR_BOOT:
++                // Recognized separately; never pass it to the legacy AIK path.
++                return 4;
++            default:
+                 return -1;
+-            } catch (Throwable th) {
+-                th = th;
+-                fileInputStream = fileInputStream2;
+-                try {
+-                    fileInputStream.close();
+-                } catch (IOException e5) {
+-                    e5.printStackTrace();
+-                }
+-                throw th;
+-            }
+-        } catch (FileNotFoundException unused3) {
+-        } catch (IOException unused4) {
+-        } catch (Throwable th2) {
+-            th = th2;
+         }
+     }
+ 
+@@ -1050,6 +1021,13 @@
+         this.J = androidx.preference.b.a(this);
+         this.H = getApplicationInfo().uid;
+         this.v = getApplicationInfo().dataDir;
++        try {
++            EngineInstaller.install(this, new File(this.v));
++        } catch (IOException installError) {
++            Toast.makeText(this, "Engine initialization failed: " + installError.getLocalizedMessage(), 1).show();
++            finish();
++            return;
++        }
+         File file = new File(getFilesDir(), "data");
+         this.u = file;
+         if (!file.exists() && !this.u.mkdir()) {
+@@ -1061,7 +1039,7 @@
+             String str = getApplicationInfo().nativeLibraryDir;
+             this.I = ProgressDialog.show(this, null, "initializing ...");
+             try {
+-                e.b.a.a.a(false).w(new l(99, "ln -s " + str + File.separator + "libbusybox.so " + this.v + File.separator + "busybox", "ln -s " + str + File.separator + "libfile.so " + this.v + File.separator + "file", "ln -s " + str + File.separator + "liblz4.so " + this.v + File.separator + "lz4", "ln -s " + str + File.separator + "libmkbootfs.so " + this.v + File.separator + "mkbootfs", "ln -s " + str + File.separator + "librepack.so " + this.v + File.separator + "repack", "ln -s " + str + File.separator + "libunpack.so " + this.v + File.separator + "unpack", "ln -s " + str + File.separator + "libxz.so " + this.v + File.separator + "xz", "ln -s " + str + File.separator + "libmagic.so " + this.v + File.separator + "magic", "ln -s " + str + File.separator + "libsimg2img.so " + this.v + File.separator + "simg2img", "ln -s " + str + File.separator + "libunpackimg.so " + this.v + File.separator + "unpackimg.sh", "ln -s " + str + File.separator + "librepackimg.so " + this.v + File.separator + "repackimg.sh"));
++                e.b.a.a.a(false).w(new l(99, "ln -s " + str + File.separator + "libbusybox.so " + this.v + File.separator + "busybox", "ln -s " + str + File.separator + "libfile.so " + this.v + File.separator + "file", "ln -s " + str + File.separator + "liblz4.so " + this.v + File.separator + "lz4", "ln -s " + str + File.separator + "libmkbootfs.so " + this.v + File.separator + "mkbootfs", "ln -s " + str + File.separator + "librepack.so " + this.v + File.separator + "repack", "ln -s " + str + File.separator + "libunpack.so " + this.v + File.separator + "unpack", "ln -s " + str + File.separator + "libxz.so " + this.v + File.separator + "xz", "ln -s " + str + File.separator + "libmagic.so " + this.v + File.separator + "magic", "ln -s " + str + File.separator + "libsimg2img.so " + this.v + File.separator + "simg2img"));
+             } catch (e.b.a.b.a | IOException | TimeoutException unused) {
+                 f0();
+                 this.x.sendEmptyMessage(27);
+@@ -1241,6 +1219,12 @@
+     @Override // android.app.Activity
+     public boolean onOptionsItemSelected(MenuItem menuItem) {
+         int itemId = menuItem.getItemId();
++        if (itemId == R.id.action_engine_legacy) {
++            boolean enabled = !this.J.getBoolean("legacy_aik_engine", false);
++            this.J.edit().putBoolean("legacy_aik_engine", enabled).apply();
++            Toast.makeText(this, enabled ? "Legacy AIK fallback enabled" : "MagiskBoot preferred; legacy fallback disabled", 1).show();
++            return true;
++        }
+         if (itemId == R.id.action_donate) {
+             new com.redlee90.imagekitchenforandroid.c.a().v1(o(), "donation");
+             return true;
