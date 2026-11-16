@@ -8,6 +8,8 @@ This branch contains a source-change set derived from the decompiled Image Studi
 
 ### Current contents
 
+- Original Image Studio 4.4.2 APK archived at [`original/Android+Image+Studio_4.4.2_APKPure.apk`](original/Android+Image+Studio_4.4.2_APKPure.apk) (8,321,816 bytes).
+- Original APK source URL recorded in [`original/original-app_url`](original/original-app_url).
 - Engine scripts for boot-image unpack/repack and root ext4 mount/unmount.
 - Java image-format detector and engine installer.
 - Updated decompiled `MainActivity.java` and menu resource in the source-change bundle.
@@ -29,7 +31,6 @@ The GitHub Actions workflow checks shell syntax and compiles/runs the pure-Java 
 
 ### Not included yet
 
-- Original Image Studio 4.4.2 APK (awaiting the original APK file being re-uploaded).
 - Official ARM64 MagiskBoot executable (must be extracted from a pinned official Magisk release and verified).
 - Complete original Gradle project/build files and resources.
 - Verified Android APK build, MTK boot-image round-trip, vendor_boot round-trip, or device mount test.
