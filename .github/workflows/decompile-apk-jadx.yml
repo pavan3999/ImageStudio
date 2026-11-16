@@ -1,0 +1,89 @@
+name: Decompile original APK with JADX
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "4.5" ]
+    paths:
+      - "original/Android+Image+Studio_4.4.2_APKPure.apk"
+      - ".github/workflows/decompile-apk-jadx.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  jadx-decompile:
+    name: JADX decompile Image Studio 4.4.2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download latest JADX release
+        id: jadx
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_json="$(curl --fail --silent --show-error --location https://api.github.com/repos/skylot/jadx/releases/latest)"
+          asset_url="$(printf '%s' "$release_json" | jq -r '.assets[] | select(.name | test("^jadx-[0-9.]+\\.zip$")) | .browser_download_url' | head -n 1)"
+          tag="$(printf '%s' "$release_json" | jq -r '.tag_name')"
+          if [ -z "$asset_url" ] || [ "$asset_url" = "null" ]; then
+            echo "Could not find the JADX release ZIP asset." >&2
+            exit 1
+          fi
+          mkdir -p tools/jadx
+          curl --fail --silent --show-error --location "$asset_url" -o /tmp/jadx.zip
+          unzip -q /tmp/jadx.zip -d tools/jadx
+          chmod +x tools/jadx/bin/jadx
+          echo "version=$tag" >> "$GITHUB_OUTPUT"
+          echo "JADX release: $tag"
+          sha256sum /tmp/jadx.zip | tee tools/jadx-release.sha256
+
+      - name: Verify APK and decompile
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="original/Android+Image+Studio_4.4.2_APKPure.apk"
+          test -s "$APK"
+          mkdir -p decompiled
+          tools/jadx/bin/jadx --threads-count 2 --show-bad-code -d decompiled "$APK" 2>&1 | tee jadx-decompile.log
+
+      - name: Create decompilation report
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "# JADX decompilation report"
+            echo
+            echo "- JADX version: ${{ steps.jadx.outputs.version }}"
+            echo "- Input APK: original/Android+Image+Studio_4.4.2_APKPure.apk"
+            if [ -d decompiled ]; then
+              echo "- Decompiled Java files: $(find decompiled -type f -name '*.java' | wc -l)"
+              echo "- Decompiled resource files: $(find decompiled -type f | wc -l)"
+            fi
+            echo
+            echo "## Decompilation log"
+            echo '~~~'
+            if [ -f jadx-decompile.log ]; then tail -n 200 jadx-decompile.log; fi
+            echo '~~~'
+          } > JADX-REPORT.md
+
+      - name: Upload decompiled source artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ImageStudio-4.4.2-JADX-${{ github.run_number }}
+          path: |
+            decompiled/
+            JADX-REPORT.md
+            jadx-decompile.log
+            tools/jadx-release.sha256
+          if-no-files-found: warn
+          retention-days: 30
