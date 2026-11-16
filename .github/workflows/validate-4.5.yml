@@ -11,17 +11,12 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: Validate source, APK archive and Java detector
+  verify-original-apk:
+    name: Verify archived original APK
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Verify preinstalled Java toolchain
-        run: |
-          java -version
-          javac -version
+        uses: actions/checkout@v5
 
       - name: Verify original APK archive and SHA-256
         shell: bash
@@ -32,6 +27,18 @@ jobs:
           test -s original/SHA256SUMS.txt
           (cd original && sha256sum --check SHA256SUMS.txt)
           echo "Original APK archive and SHA-256 verified."
+
+  validate-source:
+    name: Validate shell scripts and Java detector
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Verify preinstalled Java toolchain
+        run: |
+          java -version
+          javac -version
 
       - name: Check shell syntax
         shell: bash
@@ -60,8 +67,7 @@ jobs:
         if: always()
         run: |
           {
-            echo "## Image Studio 4.5 validation"
-            echo "- Original APK presence and SHA-256 verification"
+            echo "## Image Studio 4.5 source validation"
             echo "- Shell syntax validation"
             echo "- Java image-format detector compile and tests"
             echo "- Patch presence check"
