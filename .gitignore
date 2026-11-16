@@ -1,0 +1,12 @@
+# Android/Gradle
+.gradle/
+**/build/
+local.properties
+*.jks
+*.keystore
+
+# Local binary inputs / outputs
+*.apk
+*.img
+*.zip
+*.log
