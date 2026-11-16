@@ -30,7 +30,7 @@ jobs:
           APK="original/Android+Image+Studio_4.4.2_APKPure.apk"
           test -s "$APK"
           test -s original/SHA256SUMS.txt
-          sha256sum --check original/SHA256SUMS.txt
+          (cd original && sha256sum --check SHA256SUMS.txt)
           echo "Original APK archive and SHA-256 verified."
 
       - name: Check shell syntax
