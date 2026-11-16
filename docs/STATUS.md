@@ -3,6 +3,8 @@
 ## Included in branch 4.5
 
 - [x] Branch created.
+- [x] Original Image Studio 4.4.2 APK archived at `original/Android+Image+Studio_4.4.2_APKPure.apk` (8,321,816 bytes).
+- [x] Original APK source URL recorded in `original/original-app_url`.
 - [x] MagiskBoot-first unpack/repack shell wrappers.
 - [x] Explicit legacy AIK selection path.
 - [x] Dynamic loop-device ext4 mount/unmount scripts.
@@ -13,13 +15,13 @@
 
 ## Still required
 
-- [ ] Re-upload and archive the original Image Studio 4.4.2 APK; it is not available in the current working files.
 - [ ] Add the complete original project/build files (Gradle wrapper, build scripts, manifest, resources, dependencies).
 - [ ] Review/apply the MainActivity patch against the exact matching decompiled source.
 - [ ] Add the official ARM64 MagiskBoot executable from a pinned official release and verify its checksum.
 - [ ] Implement and test complete vendor_boot v3/v4 unpack/repack support.
 - [ ] Run a complete Android build and APK signing workflow.
 - [ ] Test on disposable images and a test device before any real-device flashing.
+- [ ] Compute and publish the original APK SHA-256 checksum from the binary.
 
 ## Safety notes
 
