@@ -9,6 +9,7 @@ This branch contains a source-change set derived from the decompiled Image Studi
 ### Current contents
 
 - Original Image Studio 4.4.2 APK archived at [`original/Android+Image+Studio_4.4.2_APKPure.apk`](original/Android+Image+Studio_4.4.2_APKPure.apk) (8,321,816 bytes).
+- SHA-256 recorded in [`original/SHA256SUMS.txt`](original/SHA256SUMS.txt): `3fea65c1eab8c590294c600a0ade9b897d2566a083032b7eb8a5508da4766d1d` (checksum supplied by repository owner; not independently recomputed here).
 - Original APK source URL recorded in [`original/original-app_url`](original/original-app_url).
 - Engine scripts for boot-image unpack/repack and root ext4 mount/unmount.
 - Java image-format detector and engine installer.
