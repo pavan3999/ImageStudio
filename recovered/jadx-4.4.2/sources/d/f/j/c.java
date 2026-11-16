@@ -1,0 +1,19 @@
+package d.f.j;
+
+import android.os.Build;
+import java.util.Arrays;
+
+/* JADX INFO: loaded from: classes.dex */
+public class c {
+    public static boolean a(Object obj, Object obj2) {
+        if (Build.VERSION.SDK_INT >= 19) {
+            return defpackage.a.a(obj, obj2);
+        }
+        return obj == obj2 || (obj != null && obj.equals(obj2));
+    }
+
+    public static int b(Object... objArr) {
+        int i = Build.VERSION.SDK_INT;
+        return Arrays.hashCode(objArr);
+    }
+}

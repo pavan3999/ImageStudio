@@ -1,0 +1,96 @@
+#!/system/bin/sh
+# AIK-mobile/repackimg: repack ramdisk and build image
+# osm0sis @ xda-developers
+# slightly modified by redlee90@gmail.com
+
+bin="$1";
+workdir="$2";
+
+abort() { cd "$bin"; echo "Error!"; }
+
+bb="$bin/busybox";
+
+cd "$bin";
+
+if [ -z "$(ls $workdir/split_img/* 2> /dev/null)" -o -z "$(ls $workdir/ramdisk/* 2> /dev/null)" ]; then
+  echo "No files found to be packed/built.";
+  abort;
+  return 1;
+fi;
+
+clear;
+
+if [ ! -z "$(ls $workdir/*-new.* 2> /dev/null)" ]; then
+  echo "Warning: Overwriting existing files!\n";
+fi;
+
+rm -f $workdir/ramdisk-new.cpio*;
+case $1 in
+  --original)
+    echo "Repacking with original ramdisk...";;
+  --level|*)
+    echo "Packing ramdisk...\n";
+    ramdiskcomp=`cat $workdir/split_img/*-ramdiskcomp`;
+    if [ "$1" == "--level" -a "$2" ]; then
+      level="-$2";
+      lvltxt=" - Level: $2";
+    elif [ "$ramdiskcomp" == "xz" ]; then
+      level=-1;
+    fi;
+    echo "Using compression: $ramdiskcomp$lvltxt";
+    repackcmd="$bb $ramdiskcomp $level";
+    compext=$ramdiskcomp;
+    case $ramdiskcomp in
+      gzip) compext=gz;;
+      lzop) compext=lzo;;
+      xz) repackcmd="$bin/xz $level -Ccrc32";;
+      lzma) repackcmd="$bin/xz $level -Flzma";;
+      bzip2) compext=bz2;;
+      lz4) repackcmd="$bin/lz4 $level -l stdin stdout";;
+    esac;
+    $bin/mkbootfs $workdir/ramdisk | $repackcmd > $workdir/ramdisk-new.cpio.$compext;
+    if [ $? != "0" ]; then
+      abort;
+      return 1;
+    fi;;
+esac;
+
+echo "\nGetting build information...";
+cd $workdir/split_img;
+kernel=`ls *-zImage`;               echo "kernel = $kernel";
+if [ "$1" == "--original" ]; then
+  ramdisk=`ls *-ramdisk.cpio*`;     echo "ramdisk = $ramdisk";
+  ramdisk="split_img/$ramdisk";
+else
+  ramdisk="ramdisk-new.cpio.$compext";
+fi;
+ramdisktype=`cat *-ramdisktype`;    echo "ramdisktype= $ramdisktype"
+cmdline=`cat *-cmdline`;            echo "cmdline = $cmdline";
+board=`cat *-board`;                echo "board = $board";
+base=`cat *-base`;                  echo "base = $base";
+pagesize=`cat *-pagesize`;          echo "pagesize = $pagesize";
+kerneloff=`cat *-kerneloff`;        echo "kernel_offset = $kerneloff";
+ramdiskoff=`cat *-ramdiskoff`;      echo "ramdisk_offset = $ramdiskoff";
+tagsoff=`cat *-tagsoff`;            echo "tags_offset = $tagsoff";
+if [ -f *-second ]; then
+  second=`ls *-second`;             echo "second = $second";  
+  second="--second split_img/$second";
+  secondoff=`cat *-secondoff`;      echo "second_offset = $secondoff";
+  secondoff="--second_offset $secondoff";
+fi;
+if [ -f *-dtb ]; then
+  dtb=`ls *-dtb`;                   echo "dtb = $dtb";
+  dtb="--dt split_img/$dtb";
+fi;
+cd ..;
+
+echo "\nBuilding image...\n";
+$bin/repack --kernel "split_img/$kernel" --ramdisk "$ramdisk" $second --cmdline "$cmdline" --board "$board" --base $base --pagesize $pagesize --kernel_offset $kerneloff --ramdisk_offset $ramdiskoff $secondoff --tags_offset $tagsoff --ramdisktype $ramdisktype $dtb -o $workdir/image-new.img;
+if [ $? != "0" ]; then
+  abort;
+  return 1;
+fi;
+
+echo "Done!";
+return 0;
+
