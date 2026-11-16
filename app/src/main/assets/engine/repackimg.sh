@@ -1,6 +1,6 @@
 #!/system/bin/sh
 # Image Studio 4.5 - dual boot-image repacker.
-# Args: BIN_DIR WORK_DIR [mode] [level] [reserved] [--legacy]
+# Args: BIN_DIR WORK_DIR [mode] [level] [reserved] --legacy (legacy mode)
 set -eu
 BIN_DIR=${1:?missing binary directory}
 WORK_DIR=${2:?missing work directory}
@@ -28,7 +28,7 @@ if [ -x "$MAGISKBOOT" ] && [ -s "$WORK_DIR/original-boot.img" ] && [ -d "$WORK_D
     exit 0
 fi
 # Legacy AIK is an explicit fallback, never automatic.
-if [ "${6:-}" = "--legacy" ] && [ -x "$BIN_DIR/repack" ] && [ -x "$BIN_DIR/mkbootfs" ] && \
+if [ "${5:-}" = "--legacy" ] && [ -x "$BIN_DIR/repack" ] && [ -x "$BIN_DIR/mkbootfs" ] && \
    [ -d "$WORK_DIR/split_img" ] && [ -d "$WORK_DIR/ramdisk" ]; then
     SPLIT="$WORK_DIR/split_img"
     set -- "$SPLIT"/*-zImage
